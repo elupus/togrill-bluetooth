@@ -38,6 +38,7 @@ classifiers = [
 # ---- Main dependencies ----
 
 dependencies = [
+    "bleak>=1.0.1",
 ]
 
 
