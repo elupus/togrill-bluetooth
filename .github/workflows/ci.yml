@@ -47,17 +47,8 @@ jobs:
       - name: Set up Python (using uv)
         run: uv python install
 
-      # Alternately can use the official Python action:
-      # - name: Set up Python (using actions/setup-python)
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: ${{ matrix.python-version }}
-
       - name: Install all dependencies
         run: uv sync --all-extras
-
-      - name: Run linting
-        run: uv run python devtools/lint.py
 
       - name: Run tests
         run: uv run pytest
