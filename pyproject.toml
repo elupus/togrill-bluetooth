@@ -57,6 +57,12 @@ dev = [
 # Add script entry points here:
 togrill-bluetooth = "togrill_bluetooth:main"
 
+[project.optional-dependencies]
+cli = [
+    "anyio>=4.9.0",
+    "asyncclick>=8.1.8",
+]
+
 
 # ---- Build system ----
 

@@ -3,15 +3,31 @@ revision = 2
 requires-python = ">=3.11, <4.0"
 
 [[package]]
-name = "basedpyright"
-version = "1.31.0"
+name = "anyio"
+version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nodejs-wheel-binaries" },
+    { name = "idna" },
+    { name = "sniffio" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/23/6dc0df43c62fdec401b1ec3aea698ba50c5abfca25259e9f0208b34d7abe/basedpyright-1.31.0.tar.gz", hash = "sha256:900a573a525a0f66f884075c2a98711bb9478e44dc60ffdf182ef681bf8e2c76", size = 22062384, upload-time = "2025-07-16T11:37:29.189Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/7d/4c1bd541d4dffa1b52bd83fb8527089e097a106fc90b467a7313b105f840/anyio-4.9.0.tar.gz", hash = "sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028", size = 190949, upload-time = "2025-03-17T00:02:54.77Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/85/cb46707458c514ae959fe139135d8f7231d95faf1c383a56979a3436b965/basedpyright-1.31.0-py3-none-any.whl", hash = "sha256:d7460ddcd3a2332b1c3fd738735d18bf2966d49aed67237efa1f19635199d414", size = 11538999, upload-time = "2025-07-16T11:37:26.446Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/ee/48ca1a7c89ffec8b6a0c5d02b89c305671d5ffd8d3c94acf8b8c408575bb/anyio-4.9.0-py3-none-any.whl", hash = "sha256:9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c", size = 100916, upload-time = "2025-03-17T00:02:52.713Z" },
+]
+
+[[package]]
+name = "asyncclick"
+version = "8.1.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/b5/e1e5fdf1c1bb7e6e614987c120a98d9324bf8edfaa5f5cd16a6235c9d91b/asyncclick-8.1.8.tar.gz", hash = "sha256:0f0eb0f280e04919d67cf71b9fcdfb4db2d9ff7203669c40284485c149578e4c", size = 232900, upload-time = "2025-01-06T09:46:52.694Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/cc/a436f0fc2d04e57a0697e0f87a03b9eaed03ad043d2d5f887f8eebcec95f/asyncclick-8.1.8-py3-none-any.whl", hash = "sha256:eb1ccb44bc767f8f0695d592c7806fdf5bd575605b4ee246ffd5fadbcfdbd7c6", size = 99093, upload-time = "2025-01-06T09:46:51.046Z" },
+    { url = "https://files.pythonhosted.org/packages/92/c4/ae9e9d25522c6dc96ff167903880a0fe94d7bd31ed999198ee5017d977ed/asyncclick-8.1.8.0-py3-none-any.whl", hash = "sha256:be146a2d8075d4fe372ff4e877f23c8b5af269d16705c1948123b9415f6fd678", size = 99115, upload-time = "2025-01-06T09:50:52.72Z" },
 ]
 
 [[package]]
@@ -84,12 +100,12 @@ wheels = [
 ]
 
 [[package]]
-name = "funlog"
-version = "0.2.1"
+name = "idna"
+version = "3.10"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/22/46/4ab8e6d87ab6aae6f1eafdd2f891c009e95e295bec2df8cd0b2f06870417/funlog-0.2.1.tar.gz", hash = "sha256:16f89e9c499077b374b4986a7c7dfc9fcd21ef40eb757fefff1a3631fdddf16f", size = 25691, upload-time = "2025-03-28T18:55:45.341Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7590aa73f1f1d3fa9a380e654b86af429e0934a32f7d/idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9", size = 190490, upload-time = "2024-09-15T18:07:39.745Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d8/af/420b08227bd021f80008520aa20a001120e71042342801d0c782a6615a39/funlog-0.2.1-py3-none-any.whl", hash = "sha256:eed8d206c21ee8dc96137b4df51689470682d4700f6f99a1a6133a0e065f3798", size = 9399, upload-time = "2025-03-28T18:55:43.733Z" },
+    { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442, upload-time = "2024-09-15T18:07:37.964Z" },
 ]
 
 [[package]]
@@ -120,22 +136,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
-]
-
-[[package]]
-name = "nodejs-wheel-binaries"
-version = "22.17.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d3/86/8962d1d24ff480f4dd31871f42c8e0d8e2c851cd558a07ee689261d310ab/nodejs_wheel_binaries-22.17.0.tar.gz", hash = "sha256:529142012fb8fd20817ef70e2ef456274df4f49933292e312c8bbc7285af6408", size = 8068, upload-time = "2025-06-29T20:24:25.002Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/53/b942c6da4ff6f87a315033f6ff6fed8fd3c22047d7ff5802badaa5dfc2c2/nodejs_wheel_binaries-22.17.0-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:6545a6f6d2f736d9c9e2eaad7e599b6b5b2d8fd4cbd2a1df0807cbcf51b9d39b", size = 51003554, upload-time = "2025-06-29T20:23:47.042Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/b7/7184a9ad2364912da22f2fe021dc4a3301721131ef7759aeb4a1f19db0b4/nodejs_wheel_binaries-22.17.0-py2.py3-none-macosx_11_0_x86_64.whl", hash = "sha256:4bea5b994dd87c20f8260031ea69a97c3d282e2d4472cc8908636a313a830d00", size = 51936848, upload-time = "2025-06-29T20:23:52.064Z" },
-    { url = "https://files.pythonhosted.org/packages/e9/7a/0ea425147b8110b8fd65a6c21cfd3bd130cdec7766604361429ef870d799/nodejs_wheel_binaries-22.17.0-py2.py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:885508615274a22499dd5314759c1cf96ba72de03e6485d73b3e5475e7f12662", size = 57925230, upload-time = "2025-06-29T20:23:56.81Z" },
-    { url = "https://files.pythonhosted.org/packages/23/5f/10a3f2ac08a839d065d9ccfd6d9df66bc46e100eaf87a8a5cf149eb3fb8e/nodejs_wheel_binaries-22.17.0-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:90f38ce034a602bcab534d55cbe0390521e73e5dcffdd1c4b34354b932172af2", size = 58457829, upload-time = "2025-06-29T20:24:01.945Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/a4/d2ca331e16eef0974eb53702df603c54f77b2a7e2007523ecdbf6cf61162/nodejs_wheel_binaries-22.17.0-py2.py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:5eed087855b644c87001fe04036213193963ccd65e7f89949e9dbe28e7743d9b", size = 59778054, upload-time = "2025-06-29T20:24:07.14Z" },
-    { url = "https://files.pythonhosted.org/packages/be/2b/04e0e7f7305fe2ba30fd4610bfb432516e0f65379fe6c2902f4b7b1ad436/nodejs_wheel_binaries-22.17.0-py2.py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:715f413c81500f0770ea8936ef1fc2529b900da8054cbf6da67cec3ee308dc76", size = 60830079, upload-time = "2025-06-29T20:24:12.21Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/67/12070b24b88040c2d694883f3dcb067052f748798f4c63f7c865769a5747/nodejs_wheel_binaries-22.17.0-py2.py3-none-win_amd64.whl", hash = "sha256:51165630493c8dd4acfe1cae1684b76940c9b03f7f355597d55e2d056a572ddd", size = 40117877, upload-time = "2025-06-29T20:24:17.51Z" },
-    { url = "https://files.pythonhosted.org/packages/2e/ec/53ac46af423527c23e40c7343189f2bce08a8337efedef4d8a33392cee23/nodejs_wheel_binaries-22.17.0-py2.py3-none-win_arm64.whl", hash = "sha256:fae56d172227671fccb04461d3cd2b26a945c6c7c7fc29edb8618876a39d8b4a", size = 38865278, upload-time = "2025-06-29T20:24:21.065Z" },
 ]
 
 [[package]]
@@ -301,6 +301,15 @@ wheels = [
 ]
 
 [[package]]
+name = "sniffio"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372, upload-time = "2024-02-25T23:20:04.057Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235, upload-time = "2024-02-25T23:20:01.196Z" },
+]
+
+[[package]]
 name = "termcolor"
 version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -316,11 +325,15 @@ dependencies = [
     { name = "bleak" },
 ]
 
+[package.optional-dependencies]
+cli = [
+    { name = "anyio" },
+    { name = "asyncclick" },
+]
+
 [package.dev-dependencies]
 dev = [
-    { name = "basedpyright" },
     { name = "codespell" },
-    { name = "funlog" },
     { name = "pytest" },
     { name = "pytest-sugar" },
     { name = "rich" },
@@ -328,13 +341,16 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "bleak", specifier = ">=1.0.1" }]
+requires-dist = [
+    { name = "anyio", marker = "extra == 'cli'", specifier = ">=4.9.0" },
+    { name = "asyncclick", marker = "extra == 'cli'", specifier = ">=8.1.8" },
+    { name = "bleak", specifier = ">=1.0.1" },
+]
+provides-extras = ["cli"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "basedpyright", specifier = ">=1.29.1" },
     { name = "codespell", specifier = ">=2.4.1" },
-    { name = "funlog", specifier = ">=0.2.1" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-sugar", specifier = ">=1.0.0" },
     { name = "rich", specifier = ">=14.0.0" },
