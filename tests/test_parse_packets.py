@@ -7,6 +7,9 @@ from togrill_bluetooth.parse_packets import (
     PacketA0Notify,
     PacketA1Notify,
     PacketA7Write,
+    PacketA300Write,
+    PacketA301Write,
+    PacketA303Write,
     PacketUnknown,
 )
 
@@ -39,10 +42,6 @@ from togrill_bluetooth.parse_packets import (
             "00ffffffffffffffffffffffffffff",
             PacketUnknown(0x00, bytes.fromhex("ffffffffffffffffffffffffffff")),
         ),
-        (
-            "a700010010",
-            PacketA7Write(probe=0, time=timedelta(seconds=16), unknown=1),
-        ),
     ],
 )
 def test_decode_packet(data, result: Packet):
@@ -51,7 +50,7 @@ def test_decode_packet(data, result: Packet):
 
 
 @pytest.mark.parametrize(
-    "data,result",
+    "packet,raw",
     [
         (
             PacketA7Write(probe=0, time=timedelta(seconds=16), unknown=1),
@@ -61,8 +60,22 @@ def test_decode_packet(data, result: Packet):
             PacketA7Write(probe=0, time=timedelta(seconds=256), unknown=1),
             "a700010100",
         ),
+        (
+            PacketA300Write(probe=1, minimum=1.6, maximum=3.2),
+            "a3 01 00 0010 0020",
+        ),
+        (
+            PacketA301Write(probe=1, target=1.6),
+            "a3 01 01 0010 0000",
+        ),
+        (
+            PacketA303Write(probe=1, grill_type=5),
+            "a3 01 03 0005 0000",
+        ),
     ],
 )
-def test_encode_packet(data: Packet, result):
-    packet = data.encode()
-    assert packet == bytes.fromhex(result)
+def test_roundtrip_packet(packet: Packet, raw: str):
+    raw_bytes = bytes.fromhex(raw)
+    packet_bytes = packet.encode()
+    assert packet_bytes == raw_bytes
+    assert packet == packet.decode(raw_bytes)

@@ -14,7 +14,14 @@ from bleak.uuids import uuidstr_to_str
 from .const import MainService, ManufacturerData
 from .exceptions import DecodeError
 from .parse import Characteristic, NotifyCharacteristic, WriteCharacteristic
-from .parse_packets import PacketA0Notify, PacketA1Notify, PacketA7Write, PacketNotify
+from .parse_packets import (
+    PacketA0Notify,
+    PacketA1Notify,
+    PacketA7Write,
+    PacketA300Write,
+    PacketA301Write,
+    PacketNotify,
+)
 
 
 @click.group()
@@ -112,6 +119,37 @@ async def timer(client: BleakClient, probe: int, seconds: int):
         WriteCharacteristic.encode(
             PacketA7Write(probe=probe, time=timedelta(seconds=seconds)).encode()
         ),
+        False,
+    )
+    click.echo(" Done")
+
+
+@connect.command()
+@click.argument("probe", type=int)
+@click.argument("minimum", type=float)
+@click.argument("maximum", type=float)
+@click.pass_obj
+async def range(client: BleakClient, probe: int, minimum: float, maximum: float):
+    click.echo(f"Setting range cook on {probe} min: {minimum} max: {maximum} ...", nl=False)
+    await client.write_gatt_char(
+        MainService.write.uuid,
+        WriteCharacteristic.encode(
+            PacketA300Write(probe=probe, minimum=minimum, maximum=maximum).encode()
+        ),
+        False,
+    )
+    click.echo(" Done")
+
+
+@connect.command()
+@click.argument("probe", type=int)
+@click.argument("target", type=float)
+@click.pass_obj
+async def target(client: BleakClient, probe: int, target: float):
+    click.echo(f"Setting range cook on {probe} target: {target} ...", nl=False)
+    await client.write_gatt_char(
+        MainService.write.uuid,
+        WriteCharacteristic.encode(PacketA301Write(probe=probe, target=target).encode()),
         False,
     )
     click.echo(" Done")

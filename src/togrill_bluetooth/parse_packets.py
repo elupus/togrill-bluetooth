@@ -135,6 +135,83 @@ class PacketA1Notify(PacketNotify):
 
 
 @dataclass
+class PacketA300Write(Packet):
+    """Set min max temperature."""
+
+    type: ClassVar[int] = 0xA3
+    probe: int
+    subtype: ClassVar[int] = 0x00
+    minimum: float
+    maximum: float
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 7:
+            raise DecodeError("Packet too short")
+        if data[2] != cls.subtype:
+            raise DecodeError("Invalid subtype")
+        return cls(
+            probe=data[1],
+            minimum=int.from_bytes(data[3:5], "big") / 10,
+            maximum=int.from_bytes(data[5:7], "big") / 10,
+        )
+
+    def encode(self) -> bytes:
+        min_temp = round(self.minimum * 10).to_bytes(2, "big")
+        max_temp = round(self.maximum * 10).to_bytes(2, "big")
+        return bytes([self.type, self.probe, self.subtype, *min_temp, *max_temp])
+
+
+@dataclass
+class PacketA301Write(Packet):
+    """Set target temperature."""
+
+    type: ClassVar[int] = 0xA3
+    probe: int
+    subtype: ClassVar[int] = 0x01
+    target: float
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 7:
+            raise DecodeError("Packet too short")
+        if data[2] != cls.subtype:
+            raise DecodeError("Invalid subtype")
+        return cls(
+            probe=data[1],
+            target=int.from_bytes(data[3:5], "big") / 10,
+        )
+
+    def encode(self) -> bytes:
+        target_temp = round(self.target * 10).to_bytes(2, "big")
+        return bytes([self.type, self.probe, self.subtype, *target_temp, 0, 0])
+
+
+@dataclass
+class PacketA303Write(Packet):
+    """Set target temperature."""
+
+    type: ClassVar[int] = 0xA3
+    probe: int
+    subtype: ClassVar[int] = 0x03
+    grill_type: int
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 7:
+            raise DecodeError("Packet too short")
+        if data[2] != cls.subtype:
+            raise DecodeError("Invalid subtype")
+        return cls(
+            probe=data[1],
+            grill_type=data[4],
+        )
+
+    def encode(self) -> bytes:
+        return bytes([self.type, self.probe, self.subtype, 0, self.grill_type, 0, 0])
+
+
+@dataclass
 class PacketA5Notify(PacketNotify):
     """Status from probe"""
 
