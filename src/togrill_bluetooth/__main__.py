@@ -16,11 +16,11 @@ from .parse_packets import Packet
 
 
 @click.group()
-async def main():
+async def cli():
     pass
 
 
-@main.command()
+@cli.command()
 async def scan():
     click.echo("Scanning for devices")
 
@@ -49,7 +49,7 @@ async def scan():
         await anyio.sleep_forever()
 
 
-@main.command()
+@cli.command()
 @click.argument("address")
 @click.option("--code", default="")
 async def connect(address: str, code: str):
@@ -97,8 +97,12 @@ async def connect(address: str, code: str):
         # client.write_gatt_char(MainService.auth.uuid, )
 
 
-if __name__ == "__main__":
+def main():
     try:
-        main()
+        cli()
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == "__main__":
+    main()

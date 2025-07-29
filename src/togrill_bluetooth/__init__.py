@@ -17,14 +17,6 @@ register_uuids(
     }
 )
 
-print(
-    {
-        char.uuid: f"ToGrill {service.__name__} {char.name}"
-        for service in Service.registry.values()
-        for char in service.characteristics()
-    }
-)
-
 __all__ = (  # noqa: F405
     MainService
 )
