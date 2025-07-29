@@ -12,7 +12,7 @@ from bleak.uuids import uuidstr_to_str
 from .const import MainService, ManufacturerData
 from .exceptions import DecodeError
 from .parse import Characteristic, NotifyCharacteristic, WriteCharacteristic
-from .parse_packets import Packet
+from .parse_packets import Packet, PacketA0, PacketA1
 
 
 @click.group()
@@ -84,13 +84,13 @@ async def connect(address: str, code: str):
         await client.start_notify(MainService.notify.uuid, notify_data)
 
         await client.write_gatt_char(
-            MainService.write.uuid, WriteCharacteristic.encode(bytes.fromhex("A00000")), False
+            MainService.write.uuid, WriteCharacteristic.encode(PacketA0.request()), False
         )
 
         # Could be needed on WP-01 devices
-        # await client.write_gatt_char(
-        #    MainService.write.uuid, WriteCharacteristic.encode(bytes.fromhex("A100")), False
-        # )
+        await client.write_gatt_char(
+            MainService.write.uuid, WriteCharacteristic.encode(PacketA1.request()), False
+        )
 
         await anyio.sleep_forever()
 

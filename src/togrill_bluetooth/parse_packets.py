@@ -70,6 +70,16 @@ class PacketA0(Packet):
             alarm_sound=alarm_sound,
         )
 
+    @classmethod
+    def request(cls) -> None:
+        return bytes(
+            [
+                cls.type,
+                0x00,
+                0x00,
+            ]
+        )
+
 
 @dataclass
 class PacketA1(Packet):
@@ -97,6 +107,15 @@ class PacketA1(Packet):
         temperatures = [convert(temperature) for temperature in temperatures]
 
         return PacketA1(temperatures=temperatures)
+
+    @classmethod
+    def request(cls) -> None:
+        return bytes(
+            [
+                cls.type,
+                0x00,
+            ]
+        )
 
 
 @dataclass
