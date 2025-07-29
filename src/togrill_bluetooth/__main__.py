@@ -3,15 +3,16 @@ import asyncclick as click
 from bleak import (
     AdvertisementData,
     BleakClient,
-    BleakScanner,
-    BleakClient,
     BleakGATTCharacteristic,
+    BleakScanner,
     BLEDevice,
 )
 from bleak.uuids import uuidstr_to_str
 
-from .parse import Characteristic, WriteCharacteristic
 from .const import MainService, ManufacturerData
+from .exceptions import DecodeError
+from .parse import Characteristic, NotifyCharacteristic, WriteCharacteristic
+from .parse_packets import Packet
 
 
 @click.group()
@@ -72,22 +73,24 @@ async def connect(address: str, code: str):
                 for char in service.characteristics:
                     tg.start_soon(read_print, char)
 
-
         def notify_data(char_specifier: BleakGATTCharacteristic, data: bytearray):
-            click.echo(f"Notify: {data.hex()}")
+            try:
+                packet_data = NotifyCharacteristic.decode(data)
+                packet = Packet.decode(packet_data)
+                click.echo(f"Notify: {packet}")
+            except DecodeError as exc:
+                click.echo(f"Failed to decode: {data.hex()} with error {exc}")
 
         await client.start_notify(MainService.notify.uuid, notify_data)
-
 
         await client.write_gatt_char(
             MainService.write.uuid, WriteCharacteristic.encode(bytes.fromhex("A00000")), False
         )
 
         # Could be needed on WP-01 devices
-        #await client.write_gatt_char(
+        # await client.write_gatt_char(
         #    MainService.write.uuid, WriteCharacteristic.encode(bytes.fromhex("A100")), False
-        #)
-
+        # )
 
         await anyio.sleep_forever()
 

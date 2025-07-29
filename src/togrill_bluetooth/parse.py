@@ -1,13 +1,15 @@
-
 from dataclasses import dataclass
 from functools import reduce
 from itertools import chain, tee
 from operator import xor
 from typing import ClassVar, Generic, TypeVar
 
-from togrill_bluetooth.exceptions import DecodeError
+from .exceptions import DecodeError
 
 CharacteristicType = TypeVar("CharacteristicType")
+
+_PAYLOAD_PREFIX = [0x55, 0xAA]
+
 
 def pretty_name(name: str):
     data = name.split("_")
@@ -59,17 +61,16 @@ class NotifyCharacteristic(Characteristic[bytes]):
         if len(data) < 5:
             raise DecodeError("Too short payload")
 
-        if data[0:2] != bytes([0x55, 0xAA]):
+        if data[0:2] != bytes(_PAYLOAD_PREFIX):
             raise DecodeError("Missing header")
 
         payload_len = int.from_bytes(data[2:4], "big")
 
-
         if len(data) - 5 != payload_len:
             raise DecodeError("Payload size mismatch")
 
-        payload = data[4:4+payload_len]
-        checksum = data[4+payload_len]
+        payload = data[4 : 4 + payload_len]
+        checksum = data[4 + payload_len]
         checksum_expected = reduce(xor, data[:-1])
         if checksum_expected != checksum:
             raise DecodeError(f"Expected checksum {checksum_expected:x} found {checksum:x}")
@@ -82,15 +83,7 @@ class WriteCharacteristic(Characteristic[bytes]):
 
     @staticmethod
     def encode(data: bytes) -> bytes:
-        prefix = [
-            0x55,
-            0xAA,
-        ]
-        payload = chain(
-            prefix,
-            len(data).to_bytes(2, 'big'),
-            data
-        )
+        payload = chain(_PAYLOAD_PREFIX, len(data).to_bytes(2, "big"), data)
         payload, payload_copy = tee(payload, 2)
         checksum = reduce(xor, payload_copy)
         return bytes(chain(payload, [checksum]))

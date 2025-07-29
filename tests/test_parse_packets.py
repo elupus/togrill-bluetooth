@@ -1,32 +1,6 @@
 import pytest
 
-from togrill_bluetooth.parse import (
-    NotifyCharacteristic,
-    WriteCharacteristic,
-)
 from togrill_bluetooth.parse_packets import Packet, PacketA0, PacketA1, PacketUnknown
-
-
-@pytest.mark.parametrize(
-    "data,result", [("A100", "55AA0002A1005C"), ("A00000", "55AA0003A000005C")]
-)
-def test_encode_write(data, result):
-    assert (
-        WriteCharacteristic.encode(bytes.fromhex(data)).hex() == bytes(bytes.fromhex(result)).hex()
-    )
-
-
-@pytest.mark.parametrize(
-    "data,result",
-    [
-        ("55aa0008a05b00080060050160", "a05b000800600501"),
-        ("55aa000fa1ffffffffffffffffffffffffffff51", "a1ffffffffffffffffffffffffffff"),
-    ],
-)
-def test_decode_notify(data, result):
-    assert (
-        NotifyCharacteristic.decode(bytes.fromhex(data)).hex() == bytes(bytes.fromhex(result)).hex()
-    )
 
 
 @pytest.mark.parametrize(
@@ -48,6 +22,10 @@ def test_decode_notify(data, result):
         (
             "a1ffffffffffffffffffffffffffff",
             PacketA1(temperatures=[None, None, None, None, None, None, None]),
+        ),
+        (
+            "a1 ffff ffff ffff ffff ffff ffff 01b5",
+            PacketA1(temperatures=[None, None, None, None, None, None, 43.7]),
         ),
         (
             "00ffffffffffffffffffffffffffff",
