@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import ClassVar, Self
 
 from .exceptions import DecodeError
@@ -107,6 +108,39 @@ class PacketA1(Packet):
         temperatures = [convert(temperature) for temperature in temperatures]
 
         return PacketA1(temperatures=temperatures)
+
+    @classmethod
+    def request(cls) -> None:
+        return bytes(
+            [
+                cls.type,
+                0x00,
+            ]
+        )
+
+
+@dataclass
+class PacketA5(Packet):
+    type: ClassVar[int] = 0xA5
+    probe: int
+    message: int
+
+    class Message(IntEnum):
+        PROBE_DISCONNECTED = 6
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 3:
+            raise DecodeError("Packet too short")
+        if data[0] != cls.type:
+            raise DecodeError("Failed to parse packet")
+
+        try:
+            message = PacketA5.Message(data[2])
+        except ValueError:
+            message = data[2]
+
+        return PacketA5(probe=data[1], message=message)
 
     @classmethod
     def request(cls) -> None:
