@@ -5,6 +5,7 @@ from operator import xor
 from typing import ClassVar, Generic, TypeVar
 
 from .exceptions import DecodeError
+from .parse_packets import Packet
 
 CharacteristicType = TypeVar("CharacteristicType")
 
@@ -14,6 +15,33 @@ _PAYLOAD_PREFIX = [0x55, 0xAA]
 def pretty_name(name: str):
     data = name.split("_")
     return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
+
+
+def wrap_payload(data: bytes) -> bytes:
+    """Wraps the payload with the prefix and checksum."""
+    payload = chain(_PAYLOAD_PREFIX, len(data).to_bytes(2, "big"), data)
+    payload, payload_copy = tee(payload, 2)
+    checksum = reduce(xor, payload_copy)
+    return bytes(chain(payload, [checksum]))
+
+
+def unwrap_payload(data: bytes) -> bytes:
+    """Unwraps the payload, removing the prefix and checksum."""
+    if len(data) < 5 or data[0:2] != bytes(_PAYLOAD_PREFIX):
+        raise DecodeError("Invalid payload format")
+
+    payload_len = int.from_bytes(data[2:4], "big")
+    if len(data) - 5 != payload_len:
+        raise DecodeError("Payload size mismatch")
+
+    payload = data[4 : 4 + payload_len]
+    checksum = data[4 + payload_len]
+    checksum_expected = reduce(xor, data[:-1])
+
+    if checksum_expected != checksum:
+        raise DecodeError(f"Expected checksum {checksum_expected:x} found {checksum:x}")
+
+    return payload
 
 
 @dataclass
@@ -58,23 +86,11 @@ class NotifyCharacteristic(Characteristic[bytes]):
 
     @staticmethod
     def decode(data: bytes) -> bytes:
-        if len(data) < 5:
-            raise DecodeError("Too short payload")
+        return unwrap_payload(data)
 
-        if data[0:2] != bytes(_PAYLOAD_PREFIX):
-            raise DecodeError("Missing header")
-
-        payload_len = int.from_bytes(data[2:4], "big")
-
-        if len(data) - 5 != payload_len:
-            raise DecodeError("Payload size mismatch")
-
-        payload = data[4 : 4 + payload_len]
-        checksum = data[4 + payload_len]
-        checksum_expected = reduce(xor, data[:-1])
-        if checksum_expected != checksum:
-            raise DecodeError(f"Expected checksum {checksum_expected:x} found {checksum:x}")
-        return payload
+    @staticmethod
+    def encode(data: Packet) -> bytes:
+        return wrap_payload(data)
 
 
 @dataclass
@@ -82,12 +98,9 @@ class WriteCharacteristic(Characteristic[bytes]):
     uuid: ClassVar[str] = "0000cee1-0000-1000-8000-00805f9b34fb"
 
     @staticmethod
-    def encode(data: bytes) -> bytes:
-        payload = chain(_PAYLOAD_PREFIX, len(data).to_bytes(2, "big"), data)
-        payload, payload_copy = tee(payload, 2)
-        checksum = reduce(xor, payload_copy)
-        return bytes(chain(payload, [checksum]))
+    def decode(data: bytes) -> bytes:
+        return unwrap_payload(data)
 
     @staticmethod
-    def encode_set_backlight_always_on(value: bool) -> bytes:
-        return WriteCharacteristic.encode(bytes([0xAE, 0x05, 0x01 if value else 0x00]))
+    def encode(data: bytes) -> bytes:
+        return wrap_payload(data)
