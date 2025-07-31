@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from functools import reduce
 from itertools import chain, tee
 from operator import xor
-from typing import ClassVar, Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar, cast
 
 from .exceptions import DecodeError
-from .parse_packets import Packet
 
 CharacteristicType = TypeVar("CharacteristicType")
 
@@ -71,7 +70,7 @@ class Service:
 
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.registry[cls.uuid] = cls
+        cls.registry[cls.uuid] = cast(Service, cls)
 
     @classmethod
     def characteristics(cls):
@@ -89,7 +88,7 @@ class NotifyCharacteristic(Characteristic[bytes]):
         return unwrap_payload(data)
 
     @staticmethod
-    def encode(data: Packet) -> bytes:
+    def encode(data: bytes) -> bytes:
         return wrap_payload(data)
 
 

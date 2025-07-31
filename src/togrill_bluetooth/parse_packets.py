@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
-from typing import ClassVar, Self
+from typing import ClassVar, Self, cast
 
 from .exceptions import DecodeError
 
-_PACKET_REGISTRY: dict[int, "Packet"] = {}
+_PACKET_REGISTRY: dict[int, "PacketNotify"] = {}
 
 
 @dataclass
@@ -24,15 +24,15 @@ class Packet:
 class PacketNotify(Packet):
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
-        if hasattr(cls, "type"):
-            _PACKET_REGISTRY[cls.type] = cls
+        if type := getattr(cls, "type", None):
+            _PACKET_REGISTRY[type] = cast(PacketNotify, cls)
 
     @classmethod
-    def decode(cls, data: bytes) -> Self:
+    def decode(cls, data: bytes) -> Packet:
         if len(data) < 1:
             raise DecodeError("Failed to parse packet")
-        cls = _PACKET_REGISTRY.get(data[0])
-        if cls:
+        registered_cls = _PACKET_REGISTRY.get(data[0])
+        if registered_cls:
             return cls.decode(data)
         return PacketUnknown(data[0], data[1:])
 
@@ -73,7 +73,7 @@ class PacketA0Notify(PacketNotify):
             alarm_interval = data[6]
             alarm_sound = data[7] == 1
 
-        return PacketA0Notify(
+        return cls(
             battery=battery,
             version_major=version_major,
             version_minor=version_minor,
@@ -85,7 +85,7 @@ class PacketA0Notify(PacketNotify):
         )
 
     @classmethod
-    def request(cls) -> None:
+    def request(cls) -> bytes:
         return bytes(
             [
                 cls.type,
@@ -122,10 +122,10 @@ class PacketA1Notify(PacketNotify):
 
         temperatures = [convert(temperature) for temperature in temperatures]
 
-        return PacketA1Notify(temperatures=temperatures)
+        return cls(temperatures=temperatures)
 
     @classmethod
-    def request(cls) -> None:
+    def request(cls) -> bytes:
         return bytes(
             [
                 cls.type,
@@ -236,7 +236,7 @@ class PacketA5Notify(PacketNotify):
         except ValueError:
             message = data[2]
 
-        return PacketA5Notify(probe=data[1], message=message)
+        return cls(probe=data[1], message=message)
 
 
 @dataclass
@@ -250,7 +250,7 @@ class PacketA7Notify(PacketNotify):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 2:
             raise DecodeError("Packet too short")
-        return PacketA7Notify(data=data[1])
+        return cls(data=data[1])
 
 
 @dataclass
@@ -266,7 +266,7 @@ class PacketA7Write(Packet):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 5:
             raise DecodeError("Packet too short")
-        return PacketA7Write(
+        return cls(
             time=timedelta(seconds=int.from_bytes(data[3:5], "big")), probe=data[1], unknown=data[2]
         )
 
@@ -291,4 +291,4 @@ class PacketUnknown(Packet):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 1:
             raise DecodeError("Packet too short")
-        return PacketUnknown(data[0], data=data[1:])
+        return cls(data[0], data=data[1:])

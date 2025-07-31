@@ -3,12 +3,12 @@ from datetime import timedelta
 import anyio
 import asyncclick as click
 from bleak import (
-    AdvertisementData,
     BleakClient,
-    BleakGATTCharacteristic,
     BleakScanner,
-    BLEDevice,
 )
+from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 from bleak.uuids import uuidstr_to_str
 
 from .const import MainService, ManufacturerData
