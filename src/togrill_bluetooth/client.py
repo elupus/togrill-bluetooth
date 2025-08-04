@@ -10,7 +10,7 @@ from bleak_retry_connector import establish_connection
 
 from .const import MainService
 from .exceptions import DecodeError
-from .parse import NotifyCharacteristic
+from .parse import NotifyCharacteristic, WriteCharacteristic
 from .parse_packets import Packet, PacketNotify
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,3 +54,8 @@ class Client:
 
     async def disconnect(self) -> None:
         await self.bleak_client.disconnect()
+
+    async def request(self, packet: type[PacketNotify]) -> None:
+        await self.bleak_client.write_gatt_char(
+            MainService.write.uuid, WriteCharacteristic.encode(packet.request()), False
+        )

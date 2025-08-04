@@ -33,8 +33,12 @@ class PacketNotify(Packet):
             raise DecodeError("Failed to parse packet")
         registered_cls = _PACKET_REGISTRY.get(data[0])
         if registered_cls:
-            return cls.decode(data)
+            return registered_cls.decode(data)
         return PacketUnknown(data[0], data[1:])
+
+    @classmethod
+    def request(cls) -> bytes:
+        raise NotImplementedError
 
 
 @dataclass
