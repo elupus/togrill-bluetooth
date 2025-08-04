@@ -24,7 +24,7 @@ from togrill_bluetooth.parse_packets import (
                 version_major=0,
                 version_minor=8,
                 function_type=0,
-                probe_number=6,
+                probe_count=6,
                 ambient=False,
                 alarm_interval=5,
                 alarm_sound=True,

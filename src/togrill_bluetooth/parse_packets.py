@@ -50,7 +50,7 @@ class PacketA0Notify(PacketNotify):
     version_major: int
     version_minor: int
     function_type: int
-    probe_number: int
+    probe_count: int
     ambient: bool
     alarm_interval: int
     alarm_sound: bool
