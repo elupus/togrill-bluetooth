@@ -68,7 +68,7 @@ class PacketA0Notify(PacketNotify):
         _unknown = data[4]
         bitfield = data[5]
         function_type = bitfield & 0xF
-        probe_number = (bitfield >> 4) & 0x7
+        probe_count = (bitfield >> 4) & 0x7
         ambient = bool(bitfield >> 7)
 
         alarm_interval = 5
@@ -82,7 +82,7 @@ class PacketA0Notify(PacketNotify):
             version_major=version_major,
             version_minor=version_minor,
             function_type=function_type,
-            probe_number=probe_number,
+            probe_count=probe_count,
             ambient=ambient,
             alarm_interval=alarm_interval,
             alarm_sound=alarm_sound,
