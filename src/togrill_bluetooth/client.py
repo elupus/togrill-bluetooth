@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Client:
-    def __init__(self, client: BleakClient, callback: Callable[[PacketNotify], None]) -> None:
+    def __init__(self, client: BleakClient, callback: Callable[[Packet], None]) -> None:
         self.bleak_client = client
-        self._notify_callback: Callable[[Packet], None]
+        self._notify_callback = callback
 
     @property
     def is_connected(self) -> bool:
@@ -32,14 +32,15 @@ class Client:
                 packet = PacketNotify.decode(packet_data)
                 _LOGGER.debug("Notify: %s", packet)
 
-                self._notify_callback(packet)
+                if self._notify_callback:
+                    self._notify_callback(packet)
             except DecodeError as exc:
                 _LOGGER.error("Failed to decode: %s with error %s", data, exc)
 
         await self.bleak_client.start_notify(MainService.notify.uuid, notify_data)
 
     @staticmethod
-    async def connect(device: BLEDevice, callback: Callable[[PacketNotify], None]) -> Client:
+    async def connect(device: BLEDevice, callback: Callable[[Packet], None]) -> Client:
         bleak_client = await establish_connection(
             BleakClient, device=device, name="ToGrill Connection"
         )
