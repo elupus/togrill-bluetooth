@@ -2,7 +2,7 @@
 
 from bleak.uuids import register_uuids
 
-from .parse import Service
+from .services import Service
 
 SUPPORTED_DEVICES = {
     "Pro-00",

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from togrill_bluetooth.parse_packets import (
+from togrill_bluetooth.packets import (
     Packet,
     PacketA0Notify,
     PacketA1Notify,

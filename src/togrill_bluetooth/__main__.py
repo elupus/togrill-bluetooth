@@ -13,8 +13,7 @@ from bleak.uuids import uuidstr_to_str
 
 from .const import MainService, ManufacturerData
 from .exceptions import DecodeError
-from .parse import Characteristic, NotifyCharacteristic, WriteCharacteristic
-from .parse_packets import (
+from .packets import (
     PacketA0Notify,
     PacketA1Notify,
     PacketA7Write,
@@ -22,6 +21,7 @@ from .parse_packets import (
     PacketA301Write,
     PacketNotify,
 )
+from .services import Characteristic, NotifyCharacteristic, WriteCharacteristic
 
 
 @click.group()

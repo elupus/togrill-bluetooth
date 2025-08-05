@@ -1,6 +1,6 @@
 import pytest
 
-from togrill_bluetooth.parse import (
+from togrill_bluetooth.services import (
     NotifyCharacteristic,
     WriteCharacteristic,
 )

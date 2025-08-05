@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
-from togrill_bluetooth.parse import NotifyCharacteristic, WriteCharacteristic
+from togrill_bluetooth.services import NotifyCharacteristic, WriteCharacteristic
 
-from .parse import Service
+from .services import Service
 
 
 class MainService(Service):
