@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Client:
-    def __init__(self, client: BleakClient, callback: Callable[[Packet], None]) -> None:
+    def __init__(self, client: BleakClient, notify_callback: Callable[[Packet], None]) -> None:
         self.bleak_client = client
-        self._notify_callback = callback
+        self._notify_callback = notify_callback
 
     @property
     def is_connected(self) -> bool:
@@ -40,12 +40,24 @@ class Client:
         await self.bleak_client.start_notify(MainService.notify.uuid, notify_data)
 
     @staticmethod
-    async def connect(device: BLEDevice, callback: Callable[[Packet], None]) -> Client:
+    async def connect(
+        device: BLEDevice,
+        notify_callback: Callable[[Packet], None],
+        disconnected_callback: Callable[[], None] | None = None,
+    ) -> Client:
+        def _disconnected_callback(client: BleakClient):
+            _LOGGER.info("Device disconnected %s", client.address)
+            if disconnected_callback:
+                disconnected_callback()
+
         bleak_client = await establish_connection(
-            BleakClient, device=device, name="ToGrill Connection"
+            BleakClient,
+            device=device,
+            name="ToGrill Connection",
+            disconnected_callback=_disconnected_callback,
         )
         try:
-            client = Client(bleak_client, callback)
+            client = Client(bleak_client, notify_callback)
             await client._start_notify()
         except Exception:
             await bleak_client.disconnect()
