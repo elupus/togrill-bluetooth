@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from functools import reduce
 from itertools import chain, tee
 from operator import xor
-from typing import ClassVar, Generic, TypeVar, cast
+from typing import ClassVar, Generic, TypeVar
 
 from .exceptions import DecodeError
 
@@ -47,7 +49,7 @@ def unwrap_payload(data: bytes) -> bytes:
 class Characteristic(Generic[CharacteristicType]):
     uuid: str
     name: str = ""
-    registry: ClassVar[dict[str, "Characteristic"]] = {}
+    registry: ClassVar[dict[str, Characteristic]] = {}
 
     def __set_name__(self, _, name: str):
         self.name = pretty_name(name)
@@ -66,11 +68,11 @@ class Characteristic(Generic[CharacteristicType]):
 
 class Service:
     uuid: ClassVar[str]
-    registry: ClassVar[dict[str, "Service"]] = {}
+    registry: ClassVar[dict[str, type[Service]]] = {}
 
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.registry[cls.uuid] = cast(Service, cls)
+        cls.registry[cls.uuid] = cls
 
     @classmethod
     def characteristics(cls):
