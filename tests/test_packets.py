@@ -6,6 +6,7 @@ from togrill_bluetooth.packets import (
     Packet,
     PacketA0Notify,
     PacketA1Notify,
+    PacketA6Write,
     PacketA7Write,
     PacketA300Write,
     PacketA301Write,
@@ -55,6 +56,18 @@ def test_decode_packet(data, result: Packet):
         (
             PacketA7Write(probe=0, time=timedelta(seconds=16), unknown=1),
             "a700010010",
+        ),
+        (
+            PacketA6Write(temperature_unit=PacketA6Write.Unit.UNIT_CELCIUS, alarm_interval=5),
+            "a60005",
+        ),
+        (
+            PacketA6Write(temperature_unit=PacketA6Write.Unit.UNIT_FARENHEIT),
+            "a601ff",
+        ),
+        (
+            PacketA6Write(alarm_interval=15),
+            "a6ff0f",
         ),
         (
             PacketA7Write(probe=0, time=timedelta(seconds=256), unknown=1),

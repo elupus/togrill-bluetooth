@@ -258,6 +258,60 @@ class PacketA7Notify(PacketNotify):
 
 
 @dataclass
+class PacketA6Write(Packet):
+    """Set alarm behaviour."""
+
+    class Unit(IntEnum):
+        UNIT_CELCIUS = 0
+        UNIT_FARENHEIT = 1
+
+    type: ClassVar[int] = 0xA6
+    temperature_unit: int | None = None
+    alarm_interval: int | None = None
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 3:
+            raise DecodeError("Packet too short")
+        if data[1] == 0xFF:
+            temperature_unit = None
+        else:
+            try:
+                temperature_unit = PacketA6Write.Unit(data[1])
+            except ValueError:
+                temperature_unit = data[2]
+
+        if data[2] == 0xFF:
+            alarm_interval = None
+        else:
+            alarm_interval = data[2]
+
+        return cls(
+            temperature_unit=temperature_unit,
+            alarm_interval=alarm_interval,
+        )
+
+    def encode(self) -> bytes:
+        if self.temperature_unit is None:
+            temperature_unit_data = 0xFF
+        else:
+            temperature_unit_data = self.temperature_unit
+
+        if self.alarm_interval is None:
+            alarm_interval_data = 0xFF
+        else:
+            alarm_interval_data = self.alarm_interval
+
+        return bytes(
+            [
+                self.type,
+                temperature_unit_data,
+                alarm_interval_data,
+            ]
+        )
+
+
+@dataclass
 class PacketA7Write(Packet):
     """Set timer."""
 
