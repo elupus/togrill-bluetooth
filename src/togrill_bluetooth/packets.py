@@ -28,7 +28,7 @@ class PacketNotify(Packet):
             _PACKET_REGISTRY[type] = cast(PacketNotify, cls)
 
     @classmethod
-    def decode(cls, data: bytes) -> Packet:
+    def decode(cls, data: bytes) -> "PacketNotify":
         if len(data) < 1:
             raise DecodeError("Failed to parse packet")
         registered_cls = _PACKET_REGISTRY.get(data[0])
@@ -39,6 +39,25 @@ class PacketNotify(Packet):
     @classmethod
     def request(cls) -> bytes:
         raise NotImplementedError
+
+
+@dataclass
+class PacketNotifyAck(PacketNotify):
+    """Set timer."""
+
+    type: ClassVar[int]
+    data: int
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 2:
+            raise DecodeError("Packet too short")
+        return cls(data=data[1])
+
+
+@dataclass
+class PacketWrite(Packet):
+    """Base class fro packet writes."""
 
 
 @dataclass
@@ -139,7 +158,20 @@ class PacketA1Notify(PacketNotify):
 
 
 @dataclass
-class PacketA300Write(Packet):
+class PacketA3Notify(PacketNotifyAck):
+    type: ClassVar[int] = 0xA3
+
+
+@dataclass
+class PacketA3Write(PacketWrite):
+    type: ClassVar[int] = 0xA3
+    notify = PacketA3Notify
+    probe: int
+    subtype: int
+
+
+@dataclass
+class PacketA300Write(PacketA3Write):
     """Set min max temperature."""
 
     type: ClassVar[int] = 0xA3
@@ -167,13 +199,13 @@ class PacketA300Write(Packet):
 
 
 @dataclass
-class PacketA301Write(Packet):
+class PacketA301Write(PacketA3Write):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
     probe: int
     subtype: ClassVar[int] = 0x01
-    target: float
+    target: float | None
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
@@ -181,18 +213,27 @@ class PacketA301Write(Packet):
             raise DecodeError("Packet too short")
         if data[2] != cls.subtype:
             raise DecodeError("Invalid subtype")
+
+        if data[3:5] == [0xFF, 0xFF]:
+            target = None
+        else:
+            target = int.from_bytes(data[3:5], "big") / 10
+
         return cls(
             probe=data[1],
-            target=int.from_bytes(data[3:5], "big") / 10,
+            target=target,
         )
 
     def encode(self) -> bytes:
-        target_temp = round(self.target * 10).to_bytes(2, "big")
+        if self.target is None:
+            target_temp = [0xFF, 0xFF]
+        else:
+            target_temp = round(self.target * 10).to_bytes(2, "big")
         return bytes([self.type, self.probe, self.subtype, *target_temp, 0, 0])
 
 
 @dataclass
-class PacketA303Write(Packet):
+class PacketA303Write(PacketA3Write):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
@@ -244,21 +285,7 @@ class PacketA5Notify(PacketNotify):
 
 
 @dataclass
-class PacketA7Notify(PacketNotify):
-    """Set timer."""
-
-    type: ClassVar[int] = 0xA7
-    data: int
-
-    @classmethod
-    def decode(cls, data: bytes) -> Self:
-        if len(data) < 2:
-            raise DecodeError("Packet too short")
-        return cls(data=data[1])
-
-
-@dataclass
-class PacketA6Write(Packet):
+class PacketA6Write(PacketWrite):
     """Set alarm behaviour."""
 
     class Unit(IntEnum):
@@ -312,7 +339,7 @@ class PacketA6Write(Packet):
 
 
 @dataclass
-class PacketA7Write(Packet):
+class PacketA7Write(PacketWrite):
     """Set timer."""
 
     type: ClassVar[int] = 0xA7
@@ -341,7 +368,12 @@ class PacketA7Write(Packet):
 
 
 @dataclass
-class PacketUnknown(Packet):
+class PacketA7Notify(PacketNotifyAck):
+    type: ClassVar[int] = 0xA7
+
+
+@dataclass
+class PacketUnknown(PacketNotify):
     type: int
     data: bytes
 

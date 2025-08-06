@@ -12,7 +12,7 @@ from bleak_retry_connector import establish_connection
 
 from .const import MainService
 from .exceptions import DecodeError
-from .packets import Packet, PacketNotify
+from .packets import Packet, PacketNotify, PacketWrite
 from .services import NotifyCharacteristic, WriteCharacteristic
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +81,25 @@ class Client:
         await self.bleak_client.write_gatt_char(
             MainService.write.uuid, WriteCharacteristic.encode(packet.request()), False
         )
+
+    async def write(self, packet: PacketWrite) -> PacketNotify:
+        result = Future[PacketNotify]()
+
+        def _callback(packet_notify: Packet):
+            if isinstance(packet_notify, PacketNotify):
+                if packet.type == packet.type:
+                    if not result.cancelled() and not result.done():
+                        result.set_result(packet_notify)
+
+        self._notify_callbacks.append(_callback)
+        try:
+            await self.bleak_client.write_gatt_char(
+                MainService.write.uuid, WriteCharacteristic.encode(packet.encode()), False
+            )
+
+            return await result
+        finally:
+            self._notify_callbacks.remove(_callback)
 
     async def read(self, packet_type: type[_PacketNotifyType]) -> _PacketNotifyType:
         result = Future[packet_type]()
