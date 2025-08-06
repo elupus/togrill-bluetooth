@@ -156,6 +156,20 @@ async def target(client: BleakClient, probe: int, target: float):
 
 
 @connect.command()
+@click.argument("data", type=str)
+@click.pass_obj
+async def request(client: BleakClient, data: str):
+    click.echo(f"Sending request : {data} ...", nl=False)
+    data_raw = bytes.fromhex(data)
+    await client.write_gatt_char(
+        MainService.write.uuid,
+        WriteCharacteristic.encode(data_raw),
+        False,
+    )
+    click.echo(" Done")
+
+
+@connect.command()
 async def wait():
     click.echo("Waiting")
     await anyio.sleep_forever()
