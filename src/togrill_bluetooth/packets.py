@@ -165,7 +165,6 @@ class PacketA3Notify(PacketNotifyAck):
 @dataclass
 class PacketA3Write(PacketWrite):
     type: ClassVar[int] = 0xA3
-    notify = PacketA3Notify
     probe: int
     subtype: int
 
