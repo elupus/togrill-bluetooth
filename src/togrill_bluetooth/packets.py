@@ -8,6 +8,18 @@ from .exceptions import DecodeError
 _PACKET_REGISTRY: dict[int, "PacketNotify"] = {}
 
 
+def from_scaled_nullable(data: bytes, scale: float) -> float | None:
+    if all(x == 0xFF for x in data):
+        return None
+    return int.from_bytes(data, "big") / scale
+
+
+def to_scaled_nullable(data: float | None, length: int, scale: float) -> bytes:
+    if data is None:
+        return bytes([0xFF] * length)
+    return round(data * scale).to_bytes(length, "big")
+
+
 @dataclass
 class Packet:
     type: ClassVar[int]
@@ -169,8 +181,8 @@ class PacketA300Write(PacketWrite):
     type: ClassVar[int] = 0xA3
     subtype: ClassVar[int] = 0x00
     probe: int
-    minimum: float
-    maximum: float
+    minimum: float | None
+    maximum: float | None
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
@@ -180,14 +192,20 @@ class PacketA300Write(PacketWrite):
             raise DecodeError("Invalid subtype")
         return cls(
             probe=data[1],
-            minimum=int.from_bytes(data[3:5], "big") / 10,
-            maximum=int.from_bytes(data[5:7], "big") / 10,
+            minimum=from_scaled_nullable(data[3:5], 10.0),
+            maximum=from_scaled_nullable(data[5:7], 10.0),
         )
 
     def encode(self) -> bytes:
-        min_temp = round(self.minimum * 10).to_bytes(2, "big")
-        max_temp = round(self.maximum * 10).to_bytes(2, "big")
-        return bytes([self.type, self.probe, self.subtype, *min_temp, *max_temp])
+        return bytes(
+            [
+                self.type,
+                self.probe,
+                self.subtype,
+                *to_scaled_nullable(self.minimum, 2, 10.0),
+                *to_scaled_nullable(self.maximum, 2, 10.0),
+            ]
+        )
 
 
 @dataclass(kw_only=True)
@@ -206,22 +224,15 @@ class PacketA301Write(PacketWrite):
         if data[2] != cls.subtype:
             raise DecodeError("Invalid subtype")
 
-        if data[3:5] == [0xFF, 0xFF]:
-            target = None
-        else:
-            target = int.from_bytes(data[3:5], "big") / 10
-
         return cls(
             probe=data[1],
-            target=target,
+            target=from_scaled_nullable(data[3:5], 10.0),
         )
 
     def encode(self) -> bytes:
-        if self.target is None:
-            target_temp = [0xFF, 0xFF]
-        else:
-            target_temp = round(self.target * 10).to_bytes(2, "big")
-        return bytes([self.type, self.probe, self.subtype, *target_temp, 0, 0])
+        return bytes(
+            [self.type, self.probe, self.subtype, *to_scaled_nullable(self.target, 2, 10.0), 0, 0]
+        )
 
 
 @dataclass(kw_only=True)
