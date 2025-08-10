@@ -1,6 +1,10 @@
-class ToGrillError(Exception):
+class BaseError(Exception):
     pass
 
 
-class DecodeError(ToGrillError):
+class DecodeError(BaseError):
+    pass
+
+
+class WriteFailed(BaseError):
     pass

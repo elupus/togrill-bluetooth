@@ -11,8 +11,8 @@ from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 
 from .const import MainService
-from .exceptions import DecodeError
-from .packets import Packet, PacketNotify, PacketWrite
+from .exceptions import DecodeError, WriteFailed
+from .packets import Packet, PacketNotify, PacketNotifyAck, PacketWrite
 from .services import NotifyCharacteristic, WriteCharacteristic
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,21 +83,31 @@ class Client:
         )
 
     async def write(self, packet: PacketWrite) -> PacketNotify:
-        result = Future[PacketNotify]()
+        result_future = Future[PacketNotify]()
 
         def _callback(packet_notify: Packet):
-            if isinstance(packet_notify, PacketNotify):
-                if packet.type == packet.type:
-                    if not result.cancelled() and not result.done():
-                        result.set_result(packet_notify)
+            if not isinstance(packet_notify, PacketNotify):
+                return
+
+            if packet.type != packet.type:
+                return
+
+            if result_future.cancelled() or result_future.done():
+                return
+
+            if isinstance(packet_notify, PacketNotifyAck):
+                if packet_notify.data == 0:
+                    result_future.set_exception(WriteFailed("Failed to write data"))
+                    return
+
+            result_future.set_result(packet_notify)
 
         self._notify_callbacks.append(_callback)
         try:
             await self.bleak_client.write_gatt_char(
                 MainService.write.uuid, WriteCharacteristic.encode(packet.encode()), False
             )
-
-            return await result
+            return await result_future
         finally:
             self._notify_callbacks.remove(_callback)
 
