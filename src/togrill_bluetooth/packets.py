@@ -10,7 +10,7 @@ _PACKET_REGISTRY: dict[int, "PacketNotify"] = {}
 
 @dataclass
 class Packet:
-    type: int
+    type: ClassVar[int]
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
@@ -163,19 +163,12 @@ class PacketA3Notify(PacketNotifyAck):
 
 
 @dataclass
-class PacketA3Write(PacketWrite):
-    type: ClassVar[int] = 0xA3
-    probe: int
-    subtype: int
-
-
-@dataclass
-class PacketA300Write(PacketA3Write):
+class PacketA300Write(PacketWrite):
     """Set min max temperature."""
 
     type: ClassVar[int] = 0xA3
-    probe: int
     subtype: ClassVar[int] = 0x00
+    probe: int
     minimum: float
     maximum: float
 
@@ -197,13 +190,13 @@ class PacketA300Write(PacketA3Write):
         return bytes([self.type, self.probe, self.subtype, *min_temp, *max_temp])
 
 
-@dataclass
-class PacketA301Write(PacketA3Write):
+@dataclass(kw_only=True)
+class PacketA301Write(PacketWrite):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
-    probe: int
     subtype: ClassVar[int] = 0x01
+    probe: int
     target: float | None
 
     @classmethod
@@ -231,13 +224,13 @@ class PacketA301Write(PacketA3Write):
         return bytes([self.type, self.probe, self.subtype, *target_temp, 0, 0])
 
 
-@dataclass
-class PacketA303Write(PacketA3Write):
+@dataclass(kw_only=True)
+class PacketA303Write(PacketWrite):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
-    probe: int
     subtype: ClassVar[int] = 0x03
+    probe: int
     grill_type: int
 
     @classmethod
