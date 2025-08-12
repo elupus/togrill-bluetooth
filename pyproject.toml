@@ -68,7 +68,7 @@ cli = [
 
 # ---- Build system ----
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
+requires = ["hatchling", "uv-dynamic-versioning<0.9.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
