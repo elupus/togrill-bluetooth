@@ -1,11 +1,15 @@
+from __future__ import annotations
+
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
-from typing import ClassVar, Self, cast
+from typing import ClassVar, Self
 
 from .exceptions import DecodeError
 
-_PACKET_REGISTRY: dict[int, "PacketNotify"] = {}
+_PACKET_REGISTRY: dict[int, list[type[PacketNotify]]] = {}
+_LOGGER = logging.getLogger(__name__)
 
 
 def from_scaled_nullable(data: bytes, scale: float) -> float | None:
@@ -18,6 +22,18 @@ def to_scaled_nullable(data: float | None, length: int, scale: float) -> bytes:
     if data is None:
         return bytes([0xFF] * length)
     return round(data * scale).to_bytes(length, "big")
+
+
+def from_nullable(data: bytes) -> int | None:
+    if all(x == 0xFF for x in data):
+        return None
+    return int.from_bytes(data, "big")
+
+
+def to_nullable(data: int | None, length: int) -> bytes:
+    if data is None:
+        return bytes([0xFF] * length)
+    return data.to_bytes(length, "big")
 
 
 @dataclass
@@ -36,16 +52,21 @@ class Packet:
 class PacketNotify(Packet):
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
-        if type := getattr(cls, "type", None):
-            _PACKET_REGISTRY[type] = cast(PacketNotify, cls)
+        if packet_type := getattr(cls, "type", None):
+            _PACKET_REGISTRY.setdefault(packet_type, []).append(cls)
 
     @classmethod
-    def decode(cls, data: bytes) -> "PacketNotify":
+    def decode(cls, data: bytes) -> PacketNotify:
         if len(data) < 1:
             raise DecodeError("Failed to parse packet")
-        registered_cls = _PACKET_REGISTRY.get(data[0])
-        if registered_cls:
-            return registered_cls.decode(data)
+        exceptions = []
+        for registered_cls in _PACKET_REGISTRY.get(data[0], []):
+            try:
+                return registered_cls.decode(data)
+            except DecodeError as exc:
+                exceptions.append(exc)
+        if exceptions:
+            raise ExceptionGroup(f"Fail to decode {data}", exceptions)
         return PacketUnknown(data[0], data[1:])
 
     @classmethod
@@ -373,6 +394,81 @@ class PacketA7Write(PacketWrite):
 @dataclass
 class PacketA7Notify(PacketNotifyAck):
     type: ClassVar[int] = 0xA7
+
+
+@dataclass
+class PacketA8Write(PacketWrite):
+    """Set alarm behaviour."""
+
+    type: ClassVar[int] = 0xA8
+    probe: int
+    unknown: int = 0
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 3:
+            raise DecodeError("Packet too short")
+        if data[0] != cls.type:
+            raise DecodeError("Invalid type")
+        return cls(probe=data[1], unknown=data[2])
+
+    def encode(self) -> bytes:
+        return bytes(
+            [
+                self.type,
+                self.probe,
+                self.unknown,
+            ]
+        )
+
+
+@dataclass
+class PacketA8Notify(PacketNotify):
+    """Status from probe"""
+
+    type: ClassVar[int] = 0xA8
+    probe: int
+    subtype: int | None
+    temperature_1: float | None = None
+    temperature_2: float | None = None
+    grill_type: int = 0
+    time: timedelta = timedelta()
+    unknown_1: bytes = bytes([0x00])
+    unknown_2: bytes = bytes([0, 0])
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        if len(data) < 12:
+            raise DecodeError("Packet too short")
+        if data[0] != cls.type:
+            raise DecodeError("Failed to parse type")
+
+        return cls(
+            probe=data[1],
+            subtype=from_nullable(data[2:3]),
+            temperature_1=from_scaled_nullable(data[3:5], 10.0),
+            temperature_2=from_scaled_nullable(data[5:7], 10.0),
+            unknown_1=data[7:8],
+            grill_type=data[8],
+            unknown_2=data[9:11],
+            time=timedelta(seconds=int.from_bytes(data[11:13], "big")),
+        )
+
+    def encode(self) -> bytes:
+        seconds = round(self.time.total_seconds())
+        return bytes(
+            [
+                self.type,
+                self.probe,
+                *to_nullable(self.subtype, 1),
+                *to_scaled_nullable(self.temperature_1, 2, 10.0),
+                *to_scaled_nullable(self.temperature_2, 2, 10.0),
+                *self.unknown_1,
+                self.grill_type,
+                *self.unknown_2,
+                *seconds.to_bytes(2, "big"),
+            ]
+        )
 
 
 @dataclass

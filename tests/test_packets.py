@@ -8,9 +8,11 @@ from togrill_bluetooth.packets import (
     PacketA1Notify,
     PacketA6Write,
     PacketA7Write,
+    PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
     PacketA303Write,
+    PacketNotify,
     PacketUnknown,
 )
 
@@ -40,13 +42,31 @@ from togrill_bluetooth.packets import (
             PacketA1Notify(temperatures=[None, None, None, None, None, None, 43.7]),
         ),
         (
+            "a8 01 00 03 e8 ff ff 00 05 00 00 00 00",
+            PacketA8Notify(probe=1, subtype=0, temperature_1=100, temperature_2=None, grill_type=5),
+        ),
+        (
+            "a8 02 00 03 e8 03 e9 00 05 00 00 00 00",
+            PacketA8Notify(
+                probe=2, subtype=0, temperature_1=100, temperature_2=100.1, grill_type=5
+            ),
+        ),
+        (
+            "a8 01 01 03e8 ffff 00 05 00 00 00 00",
+            PacketA8Notify(probe=1, subtype=1, temperature_1=100, grill_type=5),
+        ),
+        (
+            "a8 01 ff 03e8 ffff 00 05 00 00 00 00",
+            PacketA8Notify(probe=1, subtype=None, temperature_1=100, grill_type=5),
+        ),
+        (
             "00ffffffffffffffffffffffffffff",
             PacketUnknown(0x00, bytes.fromhex("ffffffffffffffffffffffffffff")),
         ),
     ],
 )
-def test_decode_packet(data, result: Packet):
-    packet = result.decode(bytes.fromhex(data))
+def test_decode_packet(data: str, result: Packet):
+    packet = PacketNotify.decode(bytes.fromhex(data))
     assert packet == result
 
 
