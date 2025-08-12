@@ -30,6 +30,16 @@ def from_nullable(data: bytes) -> int | None:
     return int.from_bytes(data, "big")
 
 
+def from_nullable_enum(data: bytes, enum: type[IntEnum]) -> int | None:
+    if all(x == 0xFF for x in data):
+        return None
+    value = int.from_bytes(data, "big")
+    try:
+        return enum(value)
+    except ValueError:
+        return value
+
+
 def to_nullable(data: int | None, length: int) -> bytes:
     if data is None:
         return bytes([0xFF] * length)
@@ -433,6 +443,11 @@ class PacketA8Write(PacketWrite):
 class PacketA8Notify(PacketNotify):
     """Status from probe"""
 
+    class AlarmType(IntEnum):
+        TARGET_TEMPERATURE = 0
+        MIN_MAX_TEMPERATURE = 1
+        GRILL_TYPE = 3
+
     type: ClassVar[int] = 0xA8
     probe: int
     alarm_type: int | None
@@ -452,7 +467,7 @@ class PacketA8Notify(PacketNotify):
 
         return cls(
             probe=data[1],
-            alarm_type=from_nullable(data[2:3]),
+            alarm_type=from_nullable_enum(data[2:3], PacketA8Notify.AlarmType),
             temperature_1=from_scaled_nullable(data[3:5], 10.0),
             temperature_2=from_scaled_nullable(data[5:7], 10.0),
             unknown_1=data[7:8],
