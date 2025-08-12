@@ -444,9 +444,8 @@ class PacketA8Notify(PacketNotify):
     """Status from probe"""
 
     class AlarmType(IntEnum):
-        TARGET_TEMPERATURE = 0
-        MIN_MAX_TEMPERATURE = 1
-        GRILL_TYPE = 3
+        TEMPERATURE_TARGET = 0
+        TEMPERATURE_RANGE = 1
 
     type: ClassVar[int] = 0xA8
     probe: int
