@@ -43,21 +43,23 @@ from togrill_bluetooth.packets import (
         ),
         (
             "a8 01 00 03 e8 ff ff 00 05 00 00 00 00",
-            PacketA8Notify(probe=1, subtype=0, temperature_1=100, temperature_2=None, grill_type=5),
+            PacketA8Notify(
+                probe=1, alarm_type=0, temperature_1=100, temperature_2=None, grill_type=5
+            ),
         ),
         (
             "a8 02 00 03 e8 03 e9 00 05 00 00 00 00",
             PacketA8Notify(
-                probe=2, subtype=0, temperature_1=100, temperature_2=100.1, grill_type=5
+                probe=2, alarm_type=0, temperature_1=100, temperature_2=100.1, grill_type=5
             ),
         ),
         (
             "a8 01 01 03e8 ffff 00 05 00 00 00 00",
-            PacketA8Notify(probe=1, subtype=1, temperature_1=100, grill_type=5),
+            PacketA8Notify(probe=1, alarm_type=1, temperature_1=100, grill_type=5),
         ),
         (
             "a8 01 ff 03e8 ffff 00 05 00 00 00 00",
-            PacketA8Notify(probe=1, subtype=None, temperature_1=100, grill_type=5),
+            PacketA8Notify(probe=1, alarm_type=None, temperature_1=100, grill_type=5),
         ),
         (
             "00ffffffffffffffffffffffffffff",

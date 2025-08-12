@@ -200,7 +200,7 @@ class PacketA300Write(PacketWrite):
     """Set min max temperature."""
 
     type: ClassVar[int] = 0xA3
-    subtype: ClassVar[int] = 0x00
+    alarm_type: ClassVar[int] = 0x00
     probe: int
     minimum: float | None
     maximum: float | None
@@ -209,7 +209,7 @@ class PacketA300Write(PacketWrite):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 7:
             raise DecodeError("Packet too short")
-        if data[2] != cls.subtype:
+        if data[2] != cls.alarm_type:
             raise DecodeError("Invalid subtype")
         return cls(
             probe=data[1],
@@ -222,7 +222,7 @@ class PacketA300Write(PacketWrite):
             [
                 self.type,
                 self.probe,
-                self.subtype,
+                self.alarm_type,
                 *to_scaled_nullable(self.minimum, 2, 10.0),
                 *to_scaled_nullable(self.maximum, 2, 10.0),
             ]
@@ -234,7 +234,7 @@ class PacketA301Write(PacketWrite):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
-    subtype: ClassVar[int] = 0x01
+    alarm_type: ClassVar[int] = 0x01
     probe: int
     target: float | None
 
@@ -242,7 +242,7 @@ class PacketA301Write(PacketWrite):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 7:
             raise DecodeError("Packet too short")
-        if data[2] != cls.subtype:
+        if data[2] != cls.alarm_type:
             raise DecodeError("Invalid subtype")
 
         return cls(
@@ -252,7 +252,14 @@ class PacketA301Write(PacketWrite):
 
     def encode(self) -> bytes:
         return bytes(
-            [self.type, self.probe, self.subtype, *to_scaled_nullable(self.target, 2, 10.0), 0, 0]
+            [
+                self.type,
+                self.probe,
+                self.alarm_type,
+                *to_scaled_nullable(self.target, 2, 10.0),
+                0,
+                0,
+            ]
         )
 
 
@@ -261,7 +268,7 @@ class PacketA303Write(PacketWrite):
     """Set target temperature."""
 
     type: ClassVar[int] = 0xA3
-    subtype: ClassVar[int] = 0x03
+    alarm_type: ClassVar[int] = 0x03
     probe: int
     grill_type: int
 
@@ -269,7 +276,7 @@ class PacketA303Write(PacketWrite):
     def decode(cls, data: bytes) -> Self:
         if len(data) < 7:
             raise DecodeError("Packet too short")
-        if data[2] != cls.subtype:
+        if data[2] != cls.alarm_type:
             raise DecodeError("Invalid subtype")
         return cls(
             probe=data[1],
@@ -277,7 +284,7 @@ class PacketA303Write(PacketWrite):
         )
 
     def encode(self) -> bytes:
-        return bytes([self.type, self.probe, self.subtype, 0, self.grill_type, 0, 0])
+        return bytes([self.type, self.probe, self.alarm_type, 0, self.grill_type, 0, 0])
 
 
 @dataclass
@@ -428,7 +435,7 @@ class PacketA8Notify(PacketNotify):
 
     type: ClassVar[int] = 0xA8
     probe: int
-    subtype: int | None
+    alarm_type: int | None
     temperature_1: float | None = None
     temperature_2: float | None = None
     grill_type: int = 0
@@ -445,7 +452,7 @@ class PacketA8Notify(PacketNotify):
 
         return cls(
             probe=data[1],
-            subtype=from_nullable(data[2:3]),
+            alarm_type=from_nullable(data[2:3]),
             temperature_1=from_scaled_nullable(data[3:5], 10.0),
             temperature_2=from_scaled_nullable(data[5:7], 10.0),
             unknown_1=data[7:8],
@@ -460,7 +467,7 @@ class PacketA8Notify(PacketNotify):
             [
                 self.type,
                 self.probe,
-                *to_nullable(self.subtype, 1),
+                *to_nullable(self.alarm_type, 1),
                 *to_scaled_nullable(self.temperature_1, 2, 10.0),
                 *to_scaled_nullable(self.temperature_2, 2, 10.0),
                 *self.unknown_1,
