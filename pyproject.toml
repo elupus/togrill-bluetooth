@@ -68,7 +68,7 @@ cli = [
 
 # ---- Build system ----
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning<0.9.0"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -77,7 +77,7 @@ source = "uv-dynamic-versioning"
 [tool.uv-dynamic-versioning]
 vcs = "git"
 style = "pep440"
-bump = "true"
+bump = true
 pattern = "default-unprefixed"
 
 [tool.hatch.build.targets.wheel]
