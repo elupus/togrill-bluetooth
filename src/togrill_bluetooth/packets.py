@@ -493,6 +493,8 @@ class PacketA8Notify(PacketNotify):
     taste: int | None = None
     time: timedelta = timedelta()
 
+    AlarmType = AlarmType
+
     @classmethod
     def decode(cls, data: bytes) -> Self:
         if len(data) < 12:
