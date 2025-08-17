@@ -3,6 +3,8 @@ from datetime import timedelta
 import pytest
 
 from togrill_bluetooth.packets import (
+    AlarmType,
+    GrillType,
     Packet,
     PacketA0Notify,
     PacketA1Notify,
@@ -14,6 +16,7 @@ from togrill_bluetooth.packets import (
     PacketA303Write,
     PacketNotify,
     PacketUnknown,
+    Taste,
 )
 
 
@@ -55,11 +58,19 @@ from togrill_bluetooth.packets import (
         ),
         (
             "a8 01 01 03e8 ffff 00 05 00 00 00 00",
-            PacketA8Notify(probe=1, alarm_type=1, temperature_1=100, grill_type=5),
+            PacketA8Notify(
+                probe=1, alarm_type=AlarmType.TEMPERATURE_TARGET, temperature_1=100, grill_type=5
+            ),
         ),
         (
-            "a8 01 ff 03e8 ffff 00 05 00 00 00 00",
-            PacketA8Notify(probe=1, alarm_type=None, temperature_1=100, grill_type=5),
+            "a8 01 ff 03e8 ffff 00 05 00 04 00 00",
+            PacketA8Notify(
+                probe=1,
+                alarm_type=None,
+                temperature_1=100,
+                grill_type=GrillType.TURKEY,
+                taste=Taste.MEDIUM_WELL,
+            ),
         ),
         (
             "00ffffffffffffffffffffffffffff",

@@ -12,38 +12,69 @@ _PACKET_REGISTRY: dict[int, list[type[PacketNotify]]] = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-def from_scaled_nullable(data: bytes, scale: float) -> float | None:
-    if all(x == 0xFF for x in data):
+def from_scaled_nullable(data: bytes, scale: float, null: int) -> float | None:
+    if (value := from_nullable(data, null)) is None:
         return None
-    return int.from_bytes(data, "big") / scale
+    return value / scale
 
 
-def to_scaled_nullable(data: float | None, length: int, scale: float) -> bytes:
+def to_scaled_nullable(data: float | None, length: int, scale: float, null: int) -> bytes:
     if data is None:
-        return bytes([0xFF] * length)
+        return null.to_bytes(length, "big")
     return round(data * scale).to_bytes(length, "big")
 
 
-def from_nullable(data: bytes) -> int | None:
-    if all(x == 0xFF for x in data):
-        return None
-    return int.from_bytes(data, "big")
-
-
-def from_nullable_enum(data: bytes, enum: type[IntEnum]) -> int | None:
-    if all(x == 0xFF for x in data):
-        return None
+def from_nullable(data: bytes, null: int) -> int | None:
     value = int.from_bytes(data, "big")
+    if value == null:
+        return None
+    return value
+
+
+def from_nullable_enum(data: bytes, enum: type[IntEnum], null: int) -> int | None:
+    if (value := from_nullable(data, null)) is None:
+        return None
     try:
         return enum(value)
     except ValueError:
         return value
 
 
-def to_nullable(data: int | None, length: int) -> bytes:
+def to_nullable(data: int | None, length: int, null: int) -> bytes:
     if data is None:
-        return bytes([0xFF] * length)
+        return null.to_bytes(length, "big")
     return data.to_bytes(length, "big")
+
+
+class GrillType(IntEnum):
+    BEEF = 1
+    VEAL = 2
+    LAMB = 3
+    PORK = 4
+    TURKEY = 5
+    CHICKEN = 6
+    SAUSAGE = 7
+    FISH = 8
+    HAMBURGER = 9
+    BBQ_SMOKE = 10
+    HOT_SMOKE = 11
+    COLD_SMOKE = 12
+    MARK_A = 13
+    MARK_B = 14
+    MARK_C = 15
+
+
+class Taste(IntEnum):
+    RARE = 1
+    MEDIUM_RARE = 2
+    MEDIUM = 3
+    MEDIUM_WELL = 4
+    WELL_DONE = 5
+
+
+class AlarmType(IntEnum):
+    TEMPERATURE_RANGE = 0
+    TEMPERATURE_TARGET = 1
 
 
 @dataclass
@@ -223,8 +254,8 @@ class PacketA300Write(PacketWrite):
             raise DecodeError("Invalid subtype")
         return cls(
             probe=data[1],
-            minimum=from_scaled_nullable(data[3:5], 10.0),
-            maximum=from_scaled_nullable(data[5:7], 10.0),
+            minimum=from_scaled_nullable(data[3:5], 10.0, 0xFFFF),
+            maximum=from_scaled_nullable(data[5:7], 10.0, 0xFFFF),
         )
 
     def encode(self) -> bytes:
@@ -233,8 +264,8 @@ class PacketA300Write(PacketWrite):
                 self.type,
                 self.probe,
                 self.alarm_type,
-                *to_scaled_nullable(self.minimum, 2, 10.0),
-                *to_scaled_nullable(self.maximum, 2, 10.0),
+                *to_scaled_nullable(self.minimum, 2, 10.0, 0xFFFF),
+                *to_scaled_nullable(self.maximum, 2, 10.0, 0xFFFF),
             ]
         )
 
@@ -257,7 +288,7 @@ class PacketA301Write(PacketWrite):
 
         return cls(
             probe=data[1],
-            target=from_scaled_nullable(data[3:5], 10.0),
+            target=from_scaled_nullable(data[3:5], 10.0, 0xFFFF),
         )
 
     def encode(self) -> bytes:
@@ -266,7 +297,7 @@ class PacketA301Write(PacketWrite):
                 self.type,
                 self.probe,
                 self.alarm_type,
-                *to_scaled_nullable(self.target, 2, 10.0),
+                *to_scaled_nullable(self.target, 2, 10.0, 0xFFFF),
                 0,
                 0,
             ]
@@ -275,12 +306,13 @@ class PacketA301Write(PacketWrite):
 
 @dataclass(kw_only=True)
 class PacketA303Write(PacketWrite):
-    """Set target temperature."""
+    """Set grill data."""
 
     type: ClassVar[int] = 0xA3
     alarm_type: ClassVar[int] = 0x03
     probe: int
-    grill_type: int
+    grill_type: int | None = None
+    taste: int | None = None
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
@@ -290,11 +322,20 @@ class PacketA303Write(PacketWrite):
             raise DecodeError("Invalid subtype")
         return cls(
             probe=data[1],
-            grill_type=data[4],
+            grill_type=from_nullable_enum(data[3:5], GrillType, 0),
+            taste=from_nullable_enum(data[5:7], Taste, 0),
         )
 
     def encode(self) -> bytes:
-        return bytes([self.type, self.probe, self.alarm_type, 0, self.grill_type, 0, 0])
+        return bytes(
+            [
+                self.type,
+                self.probe,
+                self.alarm_type,
+                *to_nullable(self.grill_type, 2, 0),
+                *to_nullable(self.taste, 2, 0),
+            ]
+        )
 
 
 @dataclass
@@ -443,19 +484,14 @@ class PacketA8Write(PacketWrite):
 class PacketA8Notify(PacketNotify):
     """Status from probe"""
 
-    class AlarmType(IntEnum):
-        TEMPERATURE_RANGE = 0
-        TEMPERATURE_TARGET = 1
-
     type: ClassVar[int] = 0xA8
     probe: int
     alarm_type: int | None
     temperature_1: float | None = None
     temperature_2: float | None = None
-    grill_type: int = 0
+    grill_type: int | None = None
+    taste: int | None = None
     time: timedelta = timedelta()
-    unknown_1: bytes = bytes([0x00])
-    unknown_2: bytes = bytes([0, 0])
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
@@ -466,12 +502,11 @@ class PacketA8Notify(PacketNotify):
 
         return cls(
             probe=data[1],
-            alarm_type=from_nullable_enum(data[2:3], PacketA8Notify.AlarmType),
-            temperature_1=from_scaled_nullable(data[3:5], 10.0),
-            temperature_2=from_scaled_nullable(data[5:7], 10.0),
-            unknown_1=data[7:8],
-            grill_type=data[8],
-            unknown_2=data[9:11],
+            alarm_type=from_nullable_enum(data[2:3], AlarmType, 0xFF),
+            temperature_1=from_scaled_nullable(data[3:5], 10.0, 0xFFFF),
+            temperature_2=from_scaled_nullable(data[5:7], 10.0, 0xFFFF),
+            grill_type=from_nullable_enum(data[7:9], GrillType, 0x0),
+            taste=from_nullable_enum(data[9:11], Taste, 0x0),
             time=timedelta(seconds=int.from_bytes(data[11:13], "big")),
         )
 
@@ -481,12 +516,11 @@ class PacketA8Notify(PacketNotify):
             [
                 self.type,
                 self.probe,
-                *to_nullable(self.alarm_type, 1),
-                *to_scaled_nullable(self.temperature_1, 2, 10.0),
-                *to_scaled_nullable(self.temperature_2, 2, 10.0),
-                *self.unknown_1,
-                self.grill_type,
-                *self.unknown_2,
+                *to_nullable(self.alarm_type, 1, 0xFF),
+                *to_scaled_nullable(self.temperature_1, 2, 10.0, 0xFFFF),
+                *to_scaled_nullable(self.temperature_2, 2, 10.0, 0xFFFF),
+                *to_nullable(self.grill_type, 2, 0x0),
+                *to_nullable(self.taste, 2, 0x0),
                 *seconds.to_bytes(2, "big"),
             ]
         )
