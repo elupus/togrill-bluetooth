@@ -348,8 +348,17 @@ class PacketA5Notify(PacketNotify):
 
     class Message(IntEnum):
         PROBE_ACKNOWLEDGE = 0
+        DEVICE_LOW_POWER = 1
+        DEVICE_HIGH_TEMP = 2
+        PROBE_BELOW_MINIMUM = 3
+        PROBE_ABOVE_MAXIMUM = 4
         PROBE_ALARM = 5
         PROBE_DISCONNECTED = 6
+        IGNITION_FAILURE = 7
+        AMBIENT_LOW_TEMP = 8
+        AMBIENT_OVER_HEAT = 9
+        AMBIENT_COOL_DOWN = 10
+        PROBE_TIMER_ALARM = 12
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
